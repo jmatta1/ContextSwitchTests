@@ -145,7 +145,7 @@ int main()
                  " Call Pairs.\n\tAverage Call Time Difference Was: "
               << (static_cast<double>(callTime) / static_cast<double>(diffCount))<<" nanoseconds"<<std::endl;
 
-    std::cout << "\n    Average, gettime call compensated, context switch time is: " <<
+    std::cout << "\n    The average, clock_gettime call compensated, fiber context switch time is: " <<
                   (static_cast<double>(diffSum-callTime) / static_cast<double>(diffCount))<<" nanoseconds"<<std::endl;
 
     return EXIT_SUCCESS;
