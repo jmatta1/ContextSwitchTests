@@ -18,7 +18,10 @@ Simply run `make` in the base directory. This will call cmake in the subdirector
 Simply run `./testFiber` to test the time of context switches between `Boost::Fiber`.
 Simply run `./testThread` to test the time of context switches between `std::thread`.
 Both programs run 1,000,000 switches between 4 different multi-tasking types (Fibers or Threads).
-This yields 4,000,000 context switches to time, as well as 4,000,000 points of data for extracting the time taken by `clock_gettime(...)`. The calculation of that value may be a bit off, but it is probably pretty close and represents a noticable percentage of the time of the context switch.
+This yields 4,000,000 context switches to time, as well as 4,000,000 points of data for extracting the time taken by `clock_gettime(...)`.
+The calculation of that value may be a bit off, but it is probably pretty close and represents a noticable percentage of the time of the fiber context switch.
+I suspect the `clock_gettime` call time differences between threaded and fibered versions comes from the fact that because the calls are in different threads and thus probably different cores, causing cache misses.
+
 ## Example Results
 On my Mid-2015 Macbook Pro, running `time ./testFiber` yields:
 ```
