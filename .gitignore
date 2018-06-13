@@ -1,0 +1,8 @@
+#Ignore the build directories
+build
+
+#Ignore the compiled binaries
+testFiber
+TestFibers/testFibers
+testThread
+TestThreads/testThreads
