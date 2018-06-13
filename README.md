@@ -23,28 +23,28 @@ This yields 4,000,000 context switches to time, as well as 4,000,000 points of d
 On my Mid-2015 Macbook Pro, running `time ./testFiber` yields:
 ```
 Fiber Context Switch Test Complete.
-    Total Fiber Context Switch Time Difference Was: 385155000ns across 4000000 Switches.
-	Average Time Difference Was: 96.2887 nanoseconds
-    Total Call Time Difference Was: 106245000ns across 4000000 Call Pairs.
-	Average Call Time Difference Was: 26.5613 nanoseconds
+    Total Fiber Context Switch Time Difference Was: 386241000ns across 4000000 Switches.
+  Average Time Difference Was: 96.5602 nanoseconds
+    Total Call Time Difference Was: 106640000ns across 4000000 Call Pairs.
+  Average Call Time Difference Was: 26.66 nanoseconds
 
-    Average, gettime call compensated, context switch time is: 69.7275 nanoseconds
+    The average, clock_gettime call compensated, fiber context switch time is: 69.9002 nanoseconds
 
-real	0m1.295s
-user	0m1.285s
-sys	0m0.008s
+real  0m1.278s
+user  0m1.269s
+sys 0m0.007s
 ```
 On the same system, running `time ./testThread` yielded:
 ```
 Thread Context Switch Test Complete.
-    Total Thread Context Switch Time Difference Was: 6997434000ns across 4000000 Switches.
-	Average Time Difference Was: 1749.36 nanoseconds
-    Total Call Time Difference Was: 136603000ns across 4000000 Call Pairs.
-	Average Call Time Difference Was: 34.1508 nanoseconds
+    Total Thread Context Switch Time Difference Was: 6979065000ns across 4000000 Switches.
+  Average Time Difference Was: 1744.77 nanoseconds
+    Total Call Time Difference Was: 140654000ns across 4000000 Call Pairs.
+  Average Call Time Difference Was: 35.1635 nanoseconds
 
-    Average, gettime call compensated, context switch time is: 1715.21 nanoseconds
+    The average, clock_gettime call compensated, thread context switch time is: 1709.6 nanoseconds
 
-real	0m14.662s
-user	0m5.567s
-sys	0m11.352s
+real  0m14.613s
+user  0m5.538s
+sys 0m11.281s
 ```
