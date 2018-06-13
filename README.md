@@ -32,7 +32,7 @@ Fiber Context Switch Test Complete.
 
 real  0m1.278s
 user  0m1.269s
-sys 0m0.007s
+sys   0m0.007s
 ```
 On the same system, running `time ./testThread` yielded:
 ```
@@ -46,5 +46,5 @@ Thread Context Switch Test Complete.
 
 real  0m14.613s
 user  0m5.538s
-sys 0m11.281s
+sys   0m11.281s
 ```
