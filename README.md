@@ -1,6 +1,6 @@
 # ContextSwitchTests
 
-A pair of programs to test the speed of context switches between Boost::Fibers (userland cooperative multi-tasking 'threads' that all run in the same thread and cooperatively yield time to the next fiber (as opposed to having the OS preempt them).
+A pair of programs to test the speed of context switches between Boost::Fibers (userland cooperative multi-tasking 'threads') and std::Threads. Fibers all run in the same thread and cooperatively yield time to the next fiber either with a fiber blocking call or a yield. Contrariwise, std::threads are full blown OS provided threads that run on seperate cores and stop when they hit a blocking operation or the OS preempts them.
 
 ## Prerequisites
  - Linux or Mac System (probably):
