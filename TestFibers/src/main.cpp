@@ -3,27 +3,29 @@
 #include<string>
 #include<vector>
 #include<sstream>
+#include<array>
 #include<x86intrin.h>
 #include<boost/bind.hpp>
 #include<boost/fiber/all.hpp>
 
 typedef boost::fibers::fiber FiberType;
 
-static const clockid_t clockType = CLOCK_REALTIME;
+static const int SelectedPmc = ((1<<30)+2);
 
 //timing variables
-unsigned long long start, stop;
-unsigned long long diffSum=0ULL;
-unsigned long long callTime=0ULL;
-unsigned long long diffCount=0;
+long long start, stop;
+long long diffSum=0ULL;
+long long callTime=0ULL;
+long long diffCount=0;
 //iteration limit (set elsewhere)
-unsigned long long iterCount;
+long long iterCount;
 
-int checkCmdLineArgs(int argc, char* argv[], int& fiberCount, unsigned long long& iterationCount);
+int checkCmdLineArgs(int argc, char* argv[], int& fiberCount, long long& iterationCount);
 void fiberFunction();
 
 int main(int argc, char* argv[])
 {
+    std::cout << start << ", " << stop << std::endl;
     int fiberCount;
     if(checkCmdLineArgs(argc, argv, fiberCount, iterCount) != 0)
     {
@@ -43,13 +45,13 @@ int main(int argc, char* argv[])
     //execute the main fiber
     for(unsigned long long i=0; i<iterCount; ++i)
     {
-        start = __rdtsc();
+        start = __rdtsc();//__rdpmc(SelectedPmc);
         boost::this_fiber::yield();
 
-        stop = __rdtsc();
+        stop = __rdtsc();//__rdpmc(SelectedPmc);
         diffSum += (stop - start);
-        start = __rdtsc();
-        stop = __rdtsc();
+        start = __rdtsc();//__rdpmc(SelectedPmc);
+        stop = __rdtsc();//__rdpmc(SelectedPmc);
         callTime += (stop - start);
         ++diffCount;
     }
@@ -70,11 +72,11 @@ int main(int argc, char* argv[])
                  " Switches.\n\tAverage Time Difference Was: "
               << avgTimeDiff <<" cycles"<<std::endl;
 
-    std::cout << "    Total Call __rdtsc Time Difference Was: " << callTime << " cycles across " << diffCount <<
-                 " Call Pairs.\n\tAverage Call __rdtsc Time Difference Was: "
+    std::cout << "    Total Call rdpmc_actual_cycles Time Difference Was: " << callTime << " cycles across " << diffCount <<
+                 " Call Pairs.\n\tAverage Call rdpmc_actual_cycles Time Difference Was: "
               << avgCallTime <<" cycles"<<std::endl;
 
-    std::cout << "\nThe average, __rdtsc call compensated, fiber context switch time is: " <<
+    std::cout << "\nThe average, rdpmc_actual_cycles call compensated, fiber context switch time is: " <<
                   (avgTimeDiff - avgCallTime) <<" cycles\n\n"<<std::endl;
 
     return 0;
@@ -84,13 +86,13 @@ void fiberFunction()
 {   
     for(unsigned long long i=0; i<iterCount; ++i)
     {
-        stop = __rdtsc();
+        stop = __rdtsc();//__rdpmc(SelectedPmc);
         diffSum += (stop - start);
-        start = __rdtsc();
-        stop = __rdtsc();
+        start = __rdtsc();//__rdpmc(SelectedPmc);
+        stop = __rdtsc();//__rdpmc(SelectedPmc);
         callTime += (stop - start);
         ++diffCount;
-        start = __rdtsc();
+        start = __rdtsc();//__rdpmc(SelectedPmc);
         boost::this_fiber::yield();
     }
 }
@@ -102,7 +104,7 @@ void printHelp(const std::string& call)
     std::cout<<"  [Num Iterations To Run] must be in the range [3, 500000000] (inclusive) - defaults to 1000000"<<std::endl;
 }
 
-int checkCmdLineArgs(int argc, char* argv[], int& fiberCount, unsigned long long& iterationCount)
+int checkCmdLineArgs(int argc, char* argv[], int& fiberCount, long long& iterationCount)
 {
     if(argc == 1) // left both to defaults
     {

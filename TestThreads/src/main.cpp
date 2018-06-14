@@ -19,6 +19,39 @@ std::atomic<unsigned long long> diffCount(0ULL);
 
 int checkCmdLineArgs(int argc, char* argv[], int& threadCount, unsigned long long& iterationCount);
 void threadFunction(int index, unsigned long long& start, unsigned long long& stop);
+/*
+// rdpmc_instructions uses a "fixed-function" performance counter to return the count of retired instructions on
+//       the current core in the low-order 48 bits of an unsigned 64-bit integer.
+unsigned long long rdpmc_instructions()
+{
+   unsigned a, d, c;
+   c = (1<<30);
+   __asm__ volatile("rdpmc" : "=a" (a), "=d" (d) : "c" (c));
+   return ((unsigned long long)a) | (((unsigned long long)d) << 32);;
+}
+
+// rdpmc_actual_cycles uses a "fixed-function" performance counter to return the count of actual CPU core cycles
+//       executed by the current core.  Core cycles are not accumulated while the processor is in the "HALT" state,
+//       which is used when the operating system has no task(s) to run on a processor core.
+unsigned long long rdpmc_actual_cycles()
+{
+   unsigned a, d, c;
+   c = (1<<30)+1;
+   __asm__ volatile("rdpmc" : "=a" (a), "=d" (d) : "c" (c));
+   return ((unsigned long long)a) | (((unsigned long long)d) << 32);;
+}
+
+// rdpmc_reference_cycles uses a "fixed-function" performance counter to return the count of "reference" (or "nominal")
+//       CPU core cycles executed by the current core.  This counts at the same rate as the TSC, but does not count
+//       when the core is in the "HALT" state.  If a timed section of code shows a larger change in TSC than in
+//       rdpmc_reference_cycles, the processor probably spent some time in a HALT state.
+unsigned long long rdpmc_reference_cycles()
+{
+   unsigned a, d, c;
+   c = (1<<30)+2;
+   __asm__ volatile("rdpmc" : "=a" (a), "=d" (d) : "c" (c));
+   return ((unsigned long long)a) | (((unsigned long long)d) << 32);;
+}*/
 
 int main(int argc, char* argv[])
 {
@@ -53,25 +86,25 @@ int main(int argc, char* argv[])
         std::unique_lock<std::mutex> lock(waitMutex);
         threadRun[0].store(true);
         condVars[0].notify_one();
-        start = __rdtsc();
+        start = __rdtsc();//rdpmc_actual_cycles();
 
         //std::cout<<"main "<<diffCount<<std::endl;
         while(!threadRun[lastIndex].load())
         {
             condVars[lastIndex].wait(lock);
-            stop = __rdtsc();
+            stop = __rdtsc();//rdpmc_actual_cycles();
         }
         diffSum += (stop - start);
         threadRun[lastIndex].store(false);
-        start = __rdtsc();
-        stop = __rdtsc();
+        start = __rdtsc();//rdpmc_actual_cycles();
+        stop = __rdtsc();//rdpmc_actual_cycles();
         callTime += (stop - start);
-        start = __rdtsc();
+        start = __rdtsc();//rdpmc_actual_cycles();
         while(threadRun[lastIndex].load())
         {//should never execute
             std::this_thread::yield();
         }
-        stop = __rdtsc();
+        stop = __rdtsc();//rdpmc_actual_cycles();
         loadTime += (stop - start);
         diffCount.fetch_add(1);
     }
@@ -96,11 +129,11 @@ int main(int argc, char* argv[])
                  " Switches.\n\tAverage Time Difference Was: "
               << avgTimeDiff <<" cycles"<<std::endl;
 
-    std::cout << "    Total Call __rdtsc Time Difference Was: " << callTime << " cycles across " << diffCount <<
-                 " Call Pairs.\n\tAverage Call __rdtsc Time Was: "
+    std::cout << "    Total Call rdpmc_actual_cycles Time Difference Was: " << callTime << " cycles across " << diffCount <<
+                 " Call Pairs.\n\tAverage Call rdpmc_actual_cycles Time Was: "
               << avgCallTime <<" cycles"<<std::endl;
 
-    std::cout << "\n    The average, __rdtsc call compensated, thread context switch time is: " <<
+    std::cout << "\n    The average, rdpmc_actual_cycles call compensated, thread context switch time is: " <<
                   (avgTimeDiff - avgCallTime)<<" cycles\n\n"<<std::endl;
 
     return 0;
@@ -115,24 +148,24 @@ void threadFunction(int index, unsigned long long& start, unsigned long long& st
         while(!threadRun[index].load())
         {
             condVars[index].wait(lock);
-            stop = __rdtsc();
+            stop = __rdtsc();//rdpmc_actual_cycles();
         }
         diffSum += (stop - start);
         threadRun[index].store(false);
-        start = __rdtsc();
-        stop = __rdtsc();
+        start = __rdtsc();//rdpmc_actual_cycles();
+        stop = __rdtsc();//rdpmc_actual_cycles();
         callTime += (stop - start);
-        start = __rdtsc();
+        start = __rdtsc();//rdpmc_actual_cycles();
         while(threadRun[index].load())
         {//should never execute
             std::this_thread::yield();
         }
-        stop = __rdtsc();
+        stop = __rdtsc();//rdpmc_actual_cycles();
         loadTime += (stop - start);
         diffCount.fetch_add(1);
         threadRun[index+1].store(true);
         condVars[index+1].notify_one();
-        start = __rdtsc();
+        start = __rdtsc();//rdpmc_actual_cycles();
     }
 }
 
