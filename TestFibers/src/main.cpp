@@ -6,7 +6,6 @@
 #include<boost/bind.hpp>
 #include<boost/fiber/all.hpp>
 
-typedef boost::fibers::buffered_channel< std::string > FifoType;
 typedef boost::fibers::fiber FiberType;
 
 static const clockid_t clockType = CLOCK_REALTIME;
@@ -20,7 +19,7 @@ unsigned long long diffCount=0;
 unsigned long long iterCount;
 
 int checkCmdLineArgs(int argc, char* argv[], int& fiberCount, unsigned long long& iterationCount);
-void fiberFunction( FifoType& recvBuff, FifoType& sendBuff);
+void fiberFunction();
 unsigned long long timeDiff(struct timespec start, struct timespec stop);
 
 int main(int argc, char* argv[])
@@ -32,48 +31,36 @@ int main(int argc, char* argv[])
     }
     
     // set up the fibers
-    int lastBufferIndex = (fiberCount - 1);
-    // generate the set of buffers
-    std::vector<FifoType*> bufferVector;
-    for(int i=0; i<fiberCount; ++i)
-    {
-        FifoType* temp = new FifoType(2);
-        bufferVector.emplace_back(temp);
-    }
+    int lastIndex = (fiberCount - 1);
 
     // generate the set of fibers
     std::vector<FiberType> fiberVector;
-    for(int i=0; i<lastBufferIndex; ++i)
+    for(int i=0; i<lastIndex; ++i)
     {
-        fiberVector.emplace_back(FiberType(boost::bind(&fiberFunction,
-                                           boost::ref(*(bufferVector[i])),
-                                           boost::ref(*(bufferVector[i+1])))));
+        fiberVector.emplace_back(FiberType(boost::bind(&fiberFunction)));
     }
 
     //execute the main fiber
     for(unsigned long long i=0; i<iterCount; ++i)
     {
-        bufferVector[0]->push("");
         clock_gettime(clockType, &start);
         boost::this_fiber::yield();
 
-        std::string value;
-        bufferVector[lastBufferIndex]->pop( value);
         clock_gettime(clockType, &stop);
         diffSum += timeDiff(start, stop);
         clock_gettime(clockType, &start);
         clock_gettime(clockType, &stop);
         callTime += timeDiff(start, stop);
         ++diffCount;
-        value.clear();
     }
 
-    bufferVector[0]->close();
-
-    for(int i=0; i<lastBufferIndex; ++i)
+    for(int i=0; i<lastIndex; ++i)
     {
         fiberVector[i].join();
     }
+
+    double avgTimeDiff = (static_cast<double>(diffSum) / static_cast<double>(diffCount));
+    double avgCallTime = (static_cast<double>(callTime) / static_cast<double>(diffCount));
 
     std::cout << "\n\nFiber Context Switch Test Complete." << "  Ran With "
               << fiberCount << " Fibers and " << iterCount << " Iterations"
@@ -81,39 +68,31 @@ int main(int argc, char* argv[])
 
     std::cout << "    Total Fiber Context Switch Time Difference Was: " << diffSum << "ns across " << diffCount <<
                  " Switches.\n\tAverage Time Difference Was: "
-              << (static_cast<double>(diffSum) / static_cast<double>(diffCount))<<" nanoseconds"<<std::endl;
+              << avgTimeDiff <<" nanoseconds"<<std::endl;
 
-    std::cout << "    Total Call Time Difference Was: " << callTime << "ns across " << diffCount <<
-                 " Call Pairs.\n\tAverage Call Time Difference Was: "
-              << (static_cast<double>(callTime) / static_cast<double>(diffCount))<<" nanoseconds"<<std::endl;
+    std::cout << "    Total Call clock_gettime Time Difference Was: " << callTime << "ns across " << diffCount <<
+                 " Call Pairs.\n\tAverage Call clock_gettime Time Difference Was: "
+              << avgCallTime <<" nanoseconds"<<std::endl;
 
     std::cout << "\nThe average, clock_gettime call compensated, fiber context switch time is: " <<
-                  (static_cast<double>(diffSum-callTime) / static_cast<double>(diffCount))<<" nanoseconds\n\n"<<std::endl;
+                  (avgTimeDiff - avgCallTime) <<" nanoseconds\n\n"<<std::endl;
 
-    return EXIT_SUCCESS;
+    return 0;
 }
 
-void fiberFunction(FifoType& recvBuff, FifoType& sendBuff)
+void fiberFunction()
 {   
     for(unsigned long long i=0; i<iterCount; ++i)
     {
-        std::string value;
         clock_gettime(clockType, &stop);
         diffSum += timeDiff(start, stop);
-        recvBuff.pop( value);
         clock_gettime(clockType, &start);
         clock_gettime(clockType, &stop);
         callTime += timeDiff(start, stop);
         ++diffCount;
-        //std::cout << "fiber " <<  id << ": clong received: " << value << std::endl;
-        value.clear();
-
-        sendBuff.push("");
         clock_gettime(clockType, &start);
         boost::this_fiber::yield();
     }
-
-    sendBuff.close();
 }
 
 unsigned long long timeDiff(struct timespec start, struct timespec stop)
@@ -133,7 +112,7 @@ int checkCmdLineArgs(int argc, char* argv[], int& fiberCount, unsigned long long
     if(argc == 1) // left both to defaults
     {
         iterationCount = 1000000;
-        fiberCount = 50;
+        fiberCount = 4;
     }
     else if(argc == 2) // specified a fiber count but not an iteration count
     {
@@ -141,7 +120,7 @@ int checkCmdLineArgs(int argc, char* argv[], int& fiberCount, unsigned long long
         std::istringstream conv;
         conv.str(argv[1]);
         conv >> fiberCount;
-        if((fiberCount <2) || (fiberCount > 100))
+        if((fiberCount <2) || (fiberCount > 1000))
         {
             printHelp(argv[0]);
             return 1;
@@ -152,7 +131,7 @@ int checkCmdLineArgs(int argc, char* argv[], int& fiberCount, unsigned long long
         std::istringstream conv;
         conv.str(argv[1]);
         conv >> fiberCount;
-        if((fiberCount < 2) || (fiberCount > 100))
+        if((fiberCount < 2) || (fiberCount > 1000))
         {
             printHelp(argv[0]);
             return 1;
