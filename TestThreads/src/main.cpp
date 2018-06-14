@@ -1,4 +1,3 @@
-#include<time.h>
 #include<chrono>
 #include<vector>
 #include<iostream>
@@ -8,8 +7,6 @@
 #include<atomic>
 #include<condition_variable>
 #include<boost/bind.hpp>
-
-static const clockid_t clockType = CLOCK_REALTIME;
 
 unsigned long long iterCount = 1000000;
 std::mutex waitMutex;
@@ -21,9 +18,7 @@ std::atomic<unsigned long long> loadTime(0ULL);
 std::atomic<unsigned long long> diffCount(0ULL);
 
 int checkCmdLineArgs(int argc, char* argv[], int& threadCount, unsigned long long& iterationCount);
-void threadFunction(int index, struct timespec& start, struct timespec& stop);
-unsigned long long timeDiff(struct timespec start, struct timespec stop);
-
+void threadFunction(int index, unsigned long long& start, unsigned long long& stop);
 
 int main(int argc, char* argv[])
 {
@@ -40,7 +35,7 @@ int main(int argc, char* argv[])
     }
     condVars = new std::condition_variable[threadCount];
 
-    struct timespec start, stop;
+    unsigned long long start, stop;
 
     std::vector<std::thread> threadList;
 
@@ -58,26 +53,26 @@ int main(int argc, char* argv[])
         std::unique_lock<std::mutex> lock(waitMutex);
         threadRun[0].store(true);
         condVars[0].notify_one();
-        clock_gettime(clockType, &start);
+        start = __rdtsc();
 
         //std::cout<<"main "<<diffCount<<std::endl;
         while(!threadRun[lastIndex].load())
         {
             condVars[lastIndex].wait(lock);
-            clock_gettime(clockType, &stop);
+            stop = __rdtsc();
         }
-        diffSum += timeDiff(start, stop);
+        diffSum += (stop - start);
         threadRun[lastIndex].store(false);
-        clock_gettime(clockType, &start);
-        clock_gettime(clockType, &stop);
-        callTime += timeDiff(start, stop);
-        clock_gettime(clockType, &start);
+        start = __rdtsc();
+        stop = __rdtsc();
+        callTime += (stop - start);
+        start = __rdtsc();
         while(threadRun[lastIndex].load())
         {//should never execute
             std::this_thread::yield();
         }
-        clock_gettime(clockType, &stop);
-        loadTime += timeDiff(start, stop);
+        stop = __rdtsc();
+        loadTime += (stop - start);
         diffCount.fetch_add(1);
     }
 
@@ -97,25 +92,21 @@ int main(int argc, char* argv[])
     double avgCallTime = (static_cast<double>(callTime) / static_cast<double>(diffCount));
     double avgLoadTime = ((static_cast<double>(loadTime) / static_cast<double>(diffCount)) - avgCallTime);
 
-    std::cout << "    Total Thread Context Switch Time Difference Was: " << diffSum << "ns across " << diffCount <<
+    std::cout << "    Total Thread Context Switch Time Difference Was: " << diffSum << " cycles across " << diffCount <<
                  " Switches.\n\tAverage Time Difference Was: "
-              << avgTimeDiff <<" nanoseconds"<<std::endl;
+              << avgTimeDiff <<" cycles"<<std::endl;
 
-    std::cout << "    Total Call clock_gettime Time Difference Was: " << callTime << "ns across " << diffCount <<
-                 " Call Pairs.\n\tAverage Call clock_gettime Time Was: "
-              << avgCallTime <<" nanoseconds"<<std::endl;
+    std::cout << "    Total Call __rdtsc Time Difference Was: " << callTime << " cycles across " << diffCount <<
+                 " Call Pairs.\n\tAverage Call __rdtsc Time Was: "
+              << avgCallTime <<" cycles"<<std::endl;
 
-    std::cout << "    Total while(atomic_bool.load()) Time Difference Was: " << loadTime << "ns across " << diffCount <<
-                 " Call Pairs.\n\tAverage, clock_gettime call compensated, while(atomic_bool.load()) Time Was: "
-              << avgLoadTime <<" nanoseconds"<<std::endl;
-
-    std::cout << "\n    The average, clock_gettime call and while(atomic_bool.load()) compensated, thread context switch time is: " <<
-                  (avgTimeDiff - avgCallTime - avgLoadTime)<<" nanoseconds\n\n"<<std::endl;
+    std::cout << "\n    The average, __rdtsc call compensated, thread context switch time is: " <<
+                  (avgTimeDiff - avgCallTime)<<" cycles\n\n"<<std::endl;
 
     return 0;
 }
 
-void threadFunction(int index, struct timespec& start, struct timespec& stop)
+void threadFunction(int index, unsigned long long& start, unsigned long long& stop)
 {   
     for(int i=0; i<iterCount; ++i)
     {
@@ -124,24 +115,24 @@ void threadFunction(int index, struct timespec& start, struct timespec& stop)
         while(!threadRun[index].load())
         {
             condVars[index].wait(lock);
-            clock_gettime(clockType, &stop);
+            stop = __rdtsc();
         }
-        diffSum += timeDiff(start, stop);
+        diffSum += (stop - start);
         threadRun[index].store(false);
-        clock_gettime(clockType, &start);
-        clock_gettime(clockType, &stop);
-        callTime += timeDiff(start, stop);
-        clock_gettime(clockType, &start);
+        start = __rdtsc();
+        stop = __rdtsc();
+        callTime += (stop - start);
+        start = __rdtsc();
         while(threadRun[index].load())
         {//should never execute
             std::this_thread::yield();
         }
-        clock_gettime(clockType, &stop);
-        loadTime += timeDiff(start, stop);
+        stop = __rdtsc();
+        loadTime += (stop - start);
         diffCount.fetch_add(1);
         threadRun[index+1].store(true);
         condVars[index+1].notify_one();
-        clock_gettime(clockType, &start);
+        start = __rdtsc();
     }
 }
 

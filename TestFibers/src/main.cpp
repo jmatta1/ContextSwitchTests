@@ -3,6 +3,7 @@
 #include<string>
 #include<vector>
 #include<sstream>
+#include<x86intrin.h>
 #include<boost/bind.hpp>
 #include<boost/fiber/all.hpp>
 
@@ -11,7 +12,7 @@ typedef boost::fibers::fiber FiberType;
 static const clockid_t clockType = CLOCK_REALTIME;
 
 //timing variables
-struct timespec start, stop;
+unsigned long long start, stop;
 unsigned long long diffSum=0ULL;
 unsigned long long callTime=0ULL;
 unsigned long long diffCount=0;
@@ -43,14 +44,14 @@ int main(int argc, char* argv[])
     //execute the main fiber
     for(unsigned long long i=0; i<iterCount; ++i)
     {
-        clock_gettime(clockType, &start);
+        start = __rdtsc();
         boost::this_fiber::yield();
 
-        clock_gettime(clockType, &stop);
-        diffSum += timeDiff(start, stop);
-        clock_gettime(clockType, &start);
-        clock_gettime(clockType, &stop);
-        callTime += timeDiff(start, stop);
+        stop = __rdtsc();
+        diffSum += (stop - start);
+        start = __rdtsc();
+        stop = __rdtsc();
+        callTime += (stop - start);
         ++diffCount;
     }
 
@@ -66,16 +67,16 @@ int main(int argc, char* argv[])
               << fiberCount << " Fibers and " << iterCount << " Iterations"
               << std::endl;
 
-    std::cout << "    Total Fiber Context Switch Time Difference Was: " << diffSum << "ns across " << diffCount <<
+    std::cout << "    Total Fiber Context Switch Time Difference Was: " << diffSum << " cycles across " << diffCount <<
                  " Switches.\n\tAverage Time Difference Was: "
-              << avgTimeDiff <<" nanoseconds"<<std::endl;
+              << avgTimeDiff <<" cycles"<<std::endl;
 
-    std::cout << "    Total Call clock_gettime Time Difference Was: " << callTime << "ns across " << diffCount <<
-                 " Call Pairs.\n\tAverage Call clock_gettime Time Difference Was: "
-              << avgCallTime <<" nanoseconds"<<std::endl;
+    std::cout << "    Total Call __rdtsc Time Difference Was: " << callTime << " cycles across " << diffCount <<
+                 " Call Pairs.\n\tAverage Call __rdtsc Time Difference Was: "
+              << avgCallTime <<" cycles"<<std::endl;
 
-    std::cout << "\nThe average, clock_gettime call compensated, fiber context switch time is: " <<
-                  (avgTimeDiff - avgCallTime) <<" nanoseconds\n\n"<<std::endl;
+    std::cout << "\nThe average, __rdtsc call compensated, fiber context switch time is: " <<
+                  (avgTimeDiff - avgCallTime) <<" cycles\n\n"<<std::endl;
 
     return 0;
 }
@@ -84,13 +85,13 @@ void fiberFunction()
 {   
     for(unsigned long long i=0; i<iterCount; ++i)
     {
-        clock_gettime(clockType, &stop);
-        diffSum += timeDiff(start, stop);
-        clock_gettime(clockType, &start);
-        clock_gettime(clockType, &stop);
-        callTime += timeDiff(start, stop);
+        stop = __rdtsc();
+        diffSum += (stop - start);
+        start = __rdtsc();
+        stop = __rdtsc();
+        callTime += (stop - start);
         ++diffCount;
-        clock_gettime(clockType, &start);
+        start = __rdtsc();
         boost::this_fiber::yield();
     }
 }
