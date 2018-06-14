@@ -136,11 +136,6 @@ void threadFunction(int index, unsigned long long& start, unsigned long long& st
     }
 }
 
-unsigned long long timeDiff(struct timespec start, struct timespec stop)
-{
-    return ((1000000000ULL*(stop.tv_sec - start.tv_sec)) + (stop.tv_nsec-start.tv_nsec));
-}
-
 void printHelp(const std::string& call)
 {
     std::cout<<"Usage:\n    " << call << " [ <Num Threads To Use> [Num Iterations To Run] ]\n"<<std::endl;

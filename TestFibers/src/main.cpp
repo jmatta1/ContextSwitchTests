@@ -21,7 +21,6 @@ unsigned long long iterCount;
 
 int checkCmdLineArgs(int argc, char* argv[], int& fiberCount, unsigned long long& iterationCount);
 void fiberFunction();
-unsigned long long timeDiff(struct timespec start, struct timespec stop);
 
 int main(int argc, char* argv[])
 {
@@ -94,11 +93,6 @@ void fiberFunction()
         start = __rdtsc();
         boost::this_fiber::yield();
     }
-}
-
-unsigned long long timeDiff(struct timespec start, struct timespec stop)
-{
-    return ((1000000000ULL*(stop.tv_sec - start.tv_sec)) + (stop.tv_nsec-start.tv_nsec));
 }
 
 void printHelp(const std::string& call)
