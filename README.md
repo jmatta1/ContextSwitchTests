@@ -29,10 +29,10 @@ I suspect the `__rdtsc` call time differences between threaded and fibered versi
 On my Mid-2015 Macbook Pro, running `time ./testFiber 50 1000000` yielded:
 ```
 Fiber Context Switch Test Complete.  Ran With 50 Fibers and 1000000 Iterations
-    Total Fiber Context Switch Time Difference Was: 3364196411 cycles across 50000000 Switches.
-  Average Time Difference Was: 67.2839 cycles
-    Total Call __rdtsc Time Difference Was: 863533911 cycles across 50000000 Call Pairs.
-  Average Call __rdtsc Time Difference Was: 17.2707 cycles
+  Total Fiber Context Switch Time Difference Was: 3364196411 cycles across 50000000 Switches.
+    Average Time Difference Was: 67.2839 cycles
+  Total Call __rdtsc Time Difference Was: 863533911 cycles across 50000000 Call Pairs.
+    Average Call __rdtsc Time Difference Was: 17.2707 cycles
 
 The average, __rdtsc call compensated, fiber context switch time is: 50.0133 cycles
 
@@ -44,10 +44,10 @@ sys   0m0.008s
 Running `time ./testFiber` (defaults to 4 fibers and 1,000,000 iterations) yielded:
 ```
 Fiber Context Switch Test Complete.  Ran With 4 Fibers and 1000000 Iterations
-    Total Fiber Context Switch Time Difference Was: 488635036 cycles across 4000000 Switches.
-  Average Time Difference Was: 122.159 cycles
-    Total Call __rdtsc Time Difference Was: 68659741 cycles across 4000000 Call Pairs.
-  Average Call __rdtsc Time Difference Was: 17.1649 cycles
+  Total Fiber Context Switch Time Difference Was: 488635036 cycles across 4000000 Switches.
+    Average Time Difference Was: 122.159 cycles
+  Total Call __rdtsc Time Difference Was: 68659741 cycles across 4000000 Call Pairs.
+    Average Call __rdtsc Time Difference Was: 17.1649 cycles
 
 The average, __rdtsc call compensated, fiber context switch time is: 104.994 cycles
 
@@ -61,10 +61,10 @@ sys   0m0.006s
 On my Mid-2015 Macbook Pro, running `time ./testThread 50 1000000` yielded:
 ```
 Thread Context Switch Test Complete.  Ran With 50 Threads and 1000000 Iterations
-    Total Thread Context Switch Time Difference Was: 240188965971 cycles across 50000000 Switches.
-  Average Time Difference Was: 4803.78 cycles
-    Total Call __rdtsc Time Difference Was: 1090830363 cycles across 50000000 Call Pairs.
-  Average Call __rdtsc Time Was: 21.8166 cycles
+  Total Thread Context Switch Time Difference Was: 240188965971 cycles across 50000000 Switches.
+    Average Time Difference Was: 4803.78 cycles
+  Total Call __rdtsc Time Difference Was: 1090830363 cycles across 50000000 Call Pairs.
+    Average Call __rdtsc Time Was: 21.8166 cycles
 
     The average, __rdtsc call, thread context switch time is: 4781.96 cycles
 
@@ -76,10 +76,10 @@ sys   2m42.043s
 Running `time ./testThread` (defaults to 4 threads and 1,000,000 iterations) yielded:
 ```
 Thread Context Switch Test Complete.  Ran With 4 Threads and 1000000 Iterations
-    Total Thread Context Switch Time Difference Was: 19163906885 cycles across 4000000 Switches.
-  Average Time Difference Was: 4790.98 cycles
-    Total Call __rdtsc Time Difference Was: 110837473 cycles across 4000000 Call Pairs.
-  Average Call __rdtsc Time Was: 27.7094 cycles
+  Total Thread Context Switch Time Difference Was: 19163906885 cycles across 4000000 Switches.
+    Average Time Difference Was: 4790.98 cycles
+  Total Call __rdtsc Time Difference Was: 110837473 cycles across 4000000 Call Pairs.
+    Average Call __rdtsc Time Was: 27.7094 cycles
 
     The average, __rdtsc call compensated, thread context switch time is: 4763.27 cycles
 
