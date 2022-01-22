@@ -10,17 +10,17 @@
 
 typedef boost::fibers::fiber FiberType;
 
-static const int SelectedPmc = ((1<<30)+2);
+//static const int SelectedPmc = ((1<<30)+2);
 
 //timing variables
-long long start, stop;
-long long diffSum=0ULL;
-long long callTime=0ULL;
-long long diffCount=0;
+unsigned long long start, stop;
+unsigned long long diffSum=0ULL;
+unsigned long long callTime=0ULL;
+unsigned long long diffCount=0;
 //iteration limit (set elsewhere)
-long long iterCount;
+unsigned long long iterCount;
 
-int checkCmdLineArgs(int argc, char* argv[], int& fiberCount, long long& iterationCount);
+int checkCmdLineArgs(int argc, char* argv[], int& fiberCount, unsigned long long& iterationCount);
 void fiberFunction();
 
 int main(int argc, char* argv[])
@@ -104,7 +104,7 @@ void printHelp(const std::string& call)
     std::cout<<"  [Num Iterations To Run] must be in the range [3, 500000000] (inclusive) - defaults to 1000000"<<std::endl;
 }
 
-int checkCmdLineArgs(int argc, char* argv[], int& fiberCount, long long& iterationCount)
+int checkCmdLineArgs(int argc, char* argv[], int& fiberCount, unsigned long long&iterationCount)
 {
     if(argc == 1) // left both to defaults
     {

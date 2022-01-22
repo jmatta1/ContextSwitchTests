@@ -6,3 +6,6 @@ testFiber
 TestFibers/testFibers
 testThread
 TestThreads/testThreads
+
+# IDE project files
+CMakeLists.txt.user*
